@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder , FormGroup, Validators } from '@angular/forms';
 
 import { Feedback, ContactType} from '../shared/feedback';
-import { flyInOut } from '../animations/app.animation';
-
+import { flyInOut, visibility, expand } from '../animations/app.animation';
+import { FeedbackService } from '../services/feedback.service';
+import { extend } from 'webdriver-js-extender';
 
 @Component({
   selector: 'app-contact',
@@ -14,7 +15,8 @@ import { flyInOut } from '../animations/app.animation';
     'style': 'display: block;'
     },
     animations: [
-      flyInOut()
+      flyInOut(),
+      expand()
     ]
 })
 export class ContactComponent implements OnInit {
@@ -28,6 +30,8 @@ export class ContactComponent implements OnInit {
     'telnum': '',
     'email': ''
   };
+  submittedFeedback: Feedback;
+  feedbackErrMess:string;
 
   validationMessages = {
     'firstname': {
@@ -50,7 +54,8 @@ export class ContactComponent implements OnInit {
     },
   };
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder,
+ private feedbackservice : FeedbackService) {
     this.createForm();
    }
   
@@ -90,8 +95,17 @@ export class ContactComponent implements OnInit {
 
   onSubmit() {
     this.feedback = this.feedbackForm.value;
+    this.feedbackErrMess = null;
     console.log(this.feedback);
-    this.feedbackForm.reset({
+    this.feedbackservice.submitFeedback(this.feedback).subscribe(feedback =>{ this.submittedFeedback=feedback; 
+      setTimeout(()=>{
+        this.submittedFeedback=null;
+        this.feedback=null;
+    },5000);}, 
+      errmess=>{this.feedbackErrMess=<any>errmess;
+      });
+
+      this.feedbackForm.reset({
       firstname: '',
       lastname: '',
       telnum: '',
